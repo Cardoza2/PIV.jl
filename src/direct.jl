@@ -37,9 +37,6 @@ function phimatrix(method::Union{Direct, MQD}, IW, SW) #Option: I could include 
     for i = 1:ns
         for j = 1:ms
             IWi = view(SW, i:i+ni-1,j:j+mi-1)
-            if i==1&&j==1
-                @show IWi
-            end
 
             phi[i,j] = correlate(method, IW, IWi)
         end
@@ -47,7 +44,7 @@ function phimatrix(method::Union{Direct, MQD}, IW, SW) #Option: I could include 
     return phi
 end
 
-
+#Todo: I need to get something to handle if the velocities should be zero, i.e. the same image is passed in. Tyler did somethere where he ignores the IW if the sum is below some threshold. 
 function getvelocity(method::Direct, phi, xiw, yiw, xsw, ysw) #Note: This might be general... I can't remember. 
     _, idx = findmax(phi)
     xv = xsw + idx[2] - 1
