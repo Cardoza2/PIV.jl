@@ -26,8 +26,6 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
     iwy, iwx = IWsize
     swy, swx = SWsize
 
-    # @show ix, iy
-
     if numimages>2
         error("searchimagepair() is defined on two images.")
     end
@@ -46,11 +44,11 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
 
     Threads.@threads for i = 1:numy
         for j = 1:numx
-            interrogationwindow = view(mat[:,:,1], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1)
+            interrogationwindow_1 = view(mat[:,:,1], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1)
 
-            searchwindow = view(mat[:,:,2], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1) 
+            interrogationwindow_2 = view(mat[:,:,2], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1) 
 
-            phi = phimatrix(method, interrogationwindow, searchwindow)
+            phi = phimatrix(method, interrogationwindow_1, interrogationwindow_2)
             
             velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi)
         end
@@ -59,6 +57,6 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
     if verbose
         println("Finished analyzing...")
     end
-    #Todo: I should convert the locations to be from the center of the IW. 
-    return xiw, (iy+1).-yiw, velocity #(iy+1).-yiw, velocity
+     
+    return xiw.+(iwx/2), (iy+1).-(yiw.+(iwy/2)), velocity 
 end

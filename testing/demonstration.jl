@@ -10,9 +10,9 @@ ip2 = "/Users/adamcardoza/Library/CloudStorage/OneDrive-cardoza.one/BYU/Fall 202
 images = [load(ip1), load(ip2)]
 
 ### Choose a method that suits your fancy. 
-# method = Direct()
+method = Direct()
 # method = MQD()
-method = FFT()
+# method = FFT()
 
 ### Convert the images to matrices and apply any preprocessing.
 mat = preprocess(images)

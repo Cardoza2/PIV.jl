@@ -2,32 +2,12 @@
 
 =#
 
-# function correlate(IW1, IW2)
-#     N, M = size(IW1)
-#     # phi = Array{eltype(IW1), 2}(undef, N, M)
-#     phi = 0.0
 
-#     for i = 1:N
-#         for j = 1:M
-#             # phi[i,j] = IW1[i,j]*IW2[i,j]
-#             phi += IW1[i,j]*IW2[i,j]
-#         end
-#     end
-
-#     return phi #sum(phi)
-# end
-#TODO: Try timing against sum(sum(IW1.*IW2)) - Oddly way more allocations, but way faster. Like 33% faster. 
 function correlate(method::Direct, IW1, IW2)
-    # n = length(IW1)
-    # phi = 0.0
-    # for i = 1:n
-    #     phi += IW1[i]*IW2[i]
-    # end
-    # return phi
     return sum(sum(IW1.*IW2))
 end
 
-function phimatrix(method::Union{Direct, MQD}, IW, SW) #Option: I could include a step size on moving the IW. (nw - ni)/stepsize + 1
+function phimatrix(method::Union{Direct, MQD}, IW, SW) 
     nw, mw = size(SW) #Size of the search window
     ni, mi = size(IW) #Size of the interrogation window
     ns = nw - ni + 1  #number of vertical searches
@@ -45,7 +25,7 @@ function phimatrix(method::Union{Direct, MQD}, IW, SW) #Option: I could include 
     return phi
 end
 
-function phimatrix!(method::Union{Direct, MQD}, phi, IW, SW) #Option: I could include a step size on moving the IW. (nw - ni)/stepsize + 1
+function phimatrix!(method::Union{Direct, MQD}, phi, IW, SW) 
     nw, mw = size(SW) #Size of the search window
     ni, mi = size(IW) #Size of the interrogation window
     ns = nw - ni + 1  #number of vertical searches
@@ -59,14 +39,13 @@ function phimatrix!(method::Union{Direct, MQD}, phi, IW, SW) #Option: I could in
         end
     end
 end
-
-#Todo: I need to get something to handle if the velocities should be zero, i.e. the same image is passed in. Tyler did somethere where he ignores the IW if the sum is below some threshold. 
+ 
 function getvelocity(method::Direct, phi, xiw, yiw, xsw, ysw)  
     _, idx = findmax(phi)
     xv = xsw + idx[2] - 1
     yv = ysw + idx[1] - 1
 
-    #Need to find the relative change. 
+    #Find the relative change. 
     return xv-xiw, -(yv-yiw) #Change y axis to positive up. 
 end
 
@@ -109,7 +88,6 @@ function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsiz
 
             searchwindow = view(mat[:,:,2], ysw[i]:ysw[i]+swy-1, xsw[j]:xsw[j]+swx-1) 
 
-            # phi = phimatrix(method, interrogationwindow, searchwindow)
             phimatrix!(method, phi, interrogationwindow, searchwindow)
             
             velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi, xiw[j], yiw[i], xsw[j], ysw[i])
@@ -120,6 +98,6 @@ function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsiz
     if verbose
         println("Finished analyzing...")
     end
-    #Todo: I should convert the locations to be from the center of the IW. 
-    return xiw, (iy+1).-yiw, velocity #(iy+1).-yiw, velocity
+     
+    return xiw.+(iwx/2), (iy+1).-(yiw.+(iwy/2)), velocity 
 end
