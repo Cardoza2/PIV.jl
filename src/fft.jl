@@ -35,20 +35,21 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
     numx = length(xiw)
     numy = length(yiw)
 
-    velocity = Array{Int64, 3}(undef, numy, numx, 2) 
+    velocity = Array{Int64, 3}(undef, numy, numx, 2)
+    phi = Array{Float64, 2}(undef, iwy, iwx) 
 
     if verbose
         println("Analyzing...")
     end
 
 
-    Threads.@threads for i = 1:numy
+    for i = 1:numy
         for j = 1:numx
-            interrogationwindow_1 = view(mat[:,:,1], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1)
+            interrogationwindow_1 = view(mat, yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1, 1)
 
-            interrogationwindow_2 = view(mat[:,:,2], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1) 
+            interrogationwindow_2 = view(mat, yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1, 2) 
 
-            phi = phimatrix(method, interrogationwindow_1, interrogationwindow_2)
+            phi .= phimatrix(method, interrogationwindow_1, interrogationwindow_2)
             
             velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi)
         end
