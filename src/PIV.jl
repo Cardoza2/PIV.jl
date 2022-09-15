@@ -1,6 +1,6 @@
 module PIV
 
-using Images, FFTW, LinearAlgebra, Plots #TODO: Do I need LinearAlgebra?
+using Images, FFTW, Plots 
 
 include("general.jl")
 include("preprocess.jl")

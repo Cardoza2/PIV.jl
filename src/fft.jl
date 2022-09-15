@@ -13,7 +13,7 @@ function getvelocity(method::FFT, phi)
     x0 = ceil(Int64, M/2)
     y0 = ceil(Int64, N/2)
 
-    return (-(idx[2]-x0), (idx[1]-y0))
+    return -(idx[2]-x0-1), (idx[1]-y0-1) #The negative ones push the velocities to zero when the same image is input. 
 end
 
 function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verbose::Bool=true)
@@ -37,14 +37,14 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
     numx = length(xiw)
     numy = length(yiw)
 
-    velocity = Array{Tuple{Int64, Int64}, 2}(undef, numy, numx) #TODO: Might need to transpose. 
+    velocity = Array{Int64, 3}(undef, numy, numx, 2) 
 
     if verbose
         println("Analyzing...")
     end
 
 
-    for i = 1:numy
+    Threads.@threads for i = 1:numy
         for j = 1:numx
             interrogationwindow = view(mat[:,:,1], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1)
 
@@ -52,7 +52,7 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
 
             phi = phimatrix(method, interrogationwindow, searchwindow)
             
-            velocity[i,j] = getvelocity(method, phi)
+            velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi)
         end
     end
     

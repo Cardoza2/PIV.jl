@@ -1,28 +1,8 @@
 #=
 This is the direct correlation for an image. 
 
-inputs: 
-- image dimension
-- M, N (interrogation window (IW) size) 
-- overlap
-- search window size
 
-Notes from class: 
-- He set the location of the IW as the top left of the IW. 
-- set limits: 
-    - Figure out how you will work with you don't want to go off the edge when you search. 
-        -> buff = ceil((window - M)/2) left buffer
-        -> right buffer buff + M 
-- set correlation locations
-    - k_initial = (buff_x, buff_y)
-    - k_step = (1-overlap)*M
-    - k_final = imagesize - buffright
-    - array to iterate over k_locations = k_initial:k_step:k_final
-- Set IW size: (find the pixels that exist inside the IW)
-    - 
-- find peak of phi
-- velocities
-    - need to know x and y location (center of IW). 
+ 
 =#
 
 export Direct, MQD, FFT
@@ -38,23 +18,6 @@ end
 struct FFT <: Method
 end
 
-# abstract type Window end
-
-# struct InterrogrationWindow{TF, TI} <: Window
-#     loc::Tuple{TI, TI}
-#     pix::Array{TF,2}
-#     N::TI
-#     M::TI
-#     type::DataType
-# end
-
-# struct SearchWindow{TF, TI} <: Window
-#     loc::Tuple{TI, TI}
-#     pix::Array{TF,2}
-#     N::TI
-#     M::TI
-#     type::DataType 
-# end
 
 # function getwindowlocations(imagesize, IWsize, overlap, SWsize) #Note: This might be a general function. 
 
@@ -336,18 +299,21 @@ function plot_velocityfield(x, y, v; scaling=1, skip::Int=0)
 
     xx = repeat(x, inner=ny)
     yy = repeat(y, outer=nx)
-    vv = v #reverse(v, dims=1)
+    # vv = v #reverse(v, dims=1)
 
     u_ = Array{Float64, 1}(undef, nn)
     v_ = Array{Float64, 1}(undef, nn)
 
-    for i = 1:nn
-        u_[i] = vv[i][1]*scaling
-        v_[i] = vv[i][2]*scaling
+    idx = 1
+    for j = 1:nx
+        for i = 1:ny
+            u_[idx] = v[i, j, 1]*scaling
+            v_[idx] = v[i, j, 2]*scaling
+            idx += 1
+        end
     end
 
     idxs = 1:1+skip:nn
 
-
-    return quiver(xx[idxs], yy[idxs], quiver=(u_[idxs], v_[idxs]), head_width=2)
+    return quiver(xx[idxs], yy[idxs], quiver=(u_[idxs], v_[idxs])) 
 end

@@ -31,10 +31,10 @@ swy, swx = sws
 
 xiw, yiw, xsw, ysw = PIV.getwindowlocations((iy, ix), iws, overlap, sws, border)
 
-xidx = 1
-yidx = 1
-plt = PIV.plot_windows(images[1], xiw[xidx], yiw[yidx], iwx, iwy, xsw[xidx], ysw[yidx], swx, swy)
-display(plt)
+# xidx = 1
+# yidx = 1
+# plt = PIV.plot_windows(images[1], xiw[xidx], yiw[yidx], iwx, iwy, xsw[xidx], ysw[yidx], swx, swy)
+# display(plt)
 
 # plts = []
 
@@ -56,6 +56,12 @@ display(plt)
 # sw = view(mat[:,:,2], ysw[1]:ysw[1]+swy-1, xsw[1]:xsw[1]+swx-1)
 # phimat = PIV.phimatrix(method, iw, sw)
 
+# xx = xiw[1]:xiw[1]+swx-iwx
+# yy = yiw[1]:yiw[1]+swy-iwy
+
+# plt = wireframe(xx, yy, phimat', camera=(35, 50), xaxis="X", yaxis="Y", zaxis="ϕ")
+# display(plt)
+
 # vel = PIV.getvelocity(method, phimat, xiw[1], yiw[1], xsw[1], ysw[1])
 
 
@@ -64,15 +70,12 @@ x, y, v = PIV.searchimagepair(method, mat, iws, overlap, sws, border)
 plt = PIV.plot_velocityfield(x, y, v; skip=2, scaling=3.0)
 display(plt)
 
-n, m = size(v)
-u_ = zeros(n, m)
-v_ = zeros(n, m)
 
-for i = 1:length(v)
-    u_[i] = v[i][1]
-    v_[i] = v[i][2]
-end
-
+#=
+time 1: 15.321 s (6630 allocations: 11.77 GiB) #Secondary changes
+time 2: 10.181 s (1798986 allocations: 25.65 GiB) #Change to sum
+time 3: 4.145 s (6674 allocations: 11.77 GiB) #Threaded
+=#
 
 
 

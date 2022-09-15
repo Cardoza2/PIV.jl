@@ -1,8 +1,12 @@
 export convertimage
 
-function convertimage(image; colorscheme=Gray())
-    grays = channelview(image)
-    return float.(grays)
+function convertimage(image) 
+    if !(eltype(image) <: Images.Gray) #if not grayscale, convert to grayscale
+        image = Images.Gray.(image)
+    end
+
+    grays = Images.channelview(image) #Convert the image to color types
+    return Images.float.(grays) #Convert the image to numbers
 end
 
 abstract type Preprocess end
@@ -15,7 +19,7 @@ abstract type MatrixProcess <: Preprocess end
 
 export preprocess
 
-function preprocess(images, kwargs...; colorscheme=Gray())
+function preprocess(images, kwargs...)
     ni = length(images)
     np = length(kwargs)
 
@@ -50,7 +54,7 @@ function preprocess(images, kwargs...; colorscheme=Gray())
             imageprocesses[pi](image)
         end
 
-        mat[:,:,i] = convertimage(image; colorscheme)
+        mat[:,:,i] = convertimage(image)
 
         for pm = 1:npm
             matrixprocesses[pm](mat[:,:,i])
