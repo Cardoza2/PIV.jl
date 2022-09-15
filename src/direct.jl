@@ -84,9 +84,9 @@ function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsiz
 
     Threads.@threads for j = 1:numx
         for i = 1:numy
-            interrogationwindow = view(mat[:,:,1], yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1)
+            interrogationwindow = view(mat, yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1, 1)
 
-            searchwindow = view(mat[:,:,2], ysw[i]:ysw[i]+swy-1, xsw[j]:xsw[j]+swx-1) 
+            searchwindow = view(mat, ysw[i]:ysw[i]+swy-1, xsw[j]:xsw[j]+swx-1, 2) 
 
             phimatrix!(method, phi, interrogationwindow, searchwindow)
             
