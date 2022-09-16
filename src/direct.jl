@@ -40,18 +40,19 @@ function phimatrix!(method::Union{Direct, MQD}, phi, IW, SW)
     end
 end
  
-function getvelocity(method::Direct, phi, xiw, yiw, xsw, ysw)  
-    _, idx = findmax(phi)
-    xv = xsw + idx[2] - 1
-    yv = ysw + idx[1] - 1
+function getvelocity(method::Direct, spd::SubPixelDisplacement, phi, xiw, yiw, xsw, ysw)  
+    xstar, ystar = getmax(spd, phi)
+
+    xv = xsw + xstar - 1
+    yv = ysw + ystar - 1
 
     #Find the relative change. 
     return xv-xiw, -(yv-yiw) #Change y axis to positive up. 
 end
 
+export searchimagepair
 
-
-function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsize, border; verbose::Bool=true)
+function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsize, border; verbose::Bool=true, spd::SubPixelDisplacement=Gauss5Point())
 
     if verbose
         println("Preparing analysis...")
@@ -67,30 +68,31 @@ function searchimagepair(method::Union{Direct, MQD}, mat, IWsize, overlap, SWsiz
 
     xiw, yiw, xsw, ysw = getwindowlocations((iy, ix), IWsize, overlap, SWsize, border)
 
-    numx = length(xiw)
-    numy = length(yiw)
-
-    velocity = Array{Int64, 3}(undef, numy, numx, 2)  
 
     if verbose
         println("Analyzing...")
     end
 
-    ### Pre-allocate phi
+    
+
+    ### Pre-allocate
     ns = swy - iwy + 1  #number of vertical searches
     ms = swx - iwx + 1  #number of horizontal searches
+    numx = length(xiw)
+    numy = length(yiw)
 
     phi = Array{eltype(mat), 2}(undef, ns, ms)
+    velocity = Array{Float64, 3}(undef, numy, numx, 2)
 
-    Threads.@threads for j = 1:numx
+    for j = 1:numx
         for i = 1:numy
             interrogationwindow = view(mat, yiw[i]:yiw[i]+iwy-1, xiw[j]:xiw[j]+iwx-1, 1)
 
             searchwindow = view(mat, ysw[i]:ysw[i]+swy-1, xsw[j]:xsw[j]+swx-1, 2) 
 
             phimatrix!(method, phi, interrogationwindow, searchwindow)
-            
-            velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi, xiw[j], yiw[i], xsw[j], ysw[i])
+
+            velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, spd, phi, xiw[j], yiw[i], xsw[j], ysw[i])
             
         end
     end

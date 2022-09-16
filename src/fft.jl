@@ -7,16 +7,17 @@ function phimatrix(method::FFT, IW1, IW2)
     return real(FFTW.fftshift(FFTW.ifft(g1p.*conj(g2p))))
 end
 
-function getvelocity(method::FFT, phi)
+function getvelocity(method::FFT, spd::SubPixelDisplacement, phi)
     N, M = size(phi)
-    _, idx = findmax(phi)
+    # _, idx = findmax(phi)
+    xstar, ystar = getmax(spd, phi)
     x0 = ceil(Int64, M/2)
     y0 = ceil(Int64, N/2)
 
-    return -(idx[2]-x0-1), (idx[1]-y0-1) #The negative ones push the velocities to zero when the same image is input. 
+    return -(xstar-x0-1), (ystar-y0-1) #The negative ones push the velocities to zero when the same image is input. 
 end
 
-function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verbose::Bool=true)
+function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verbose::Bool=true, spd::SubPixelDisplacement=Gauss5Point())
 
     if verbose
         println("Preparing analysis...")
@@ -35,7 +36,7 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
     numx = length(xiw)
     numy = length(yiw)
 
-    velocity = Array{Int64, 3}(undef, numy, numx, 2)
+    velocity = Array{Float64, 3}(undef, numy, numx, 2)
     phi = Array{Float64, 2}(undef, iwy, iwx) 
 
     if verbose
@@ -51,7 +52,7 @@ function searchimagepair(method::FFT, mat, IWsize, overlap, SWsize, border; verb
 
             phi .= phimatrix(method, interrogationwindow_1, interrogationwindow_2)
             
-            velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, phi)
+            velocity[i, j, 1], velocity[i, j, 2] = getvelocity(method, spd, phi)
         end
     end
     

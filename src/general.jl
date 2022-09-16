@@ -19,7 +19,6 @@ struct FFT <: Method
 end
 
 
-
 function findIWbuffer(ix, iwx, iwss_x, border)
     n = 1
     while n<(ix-iwx+1)  
@@ -130,51 +129,63 @@ function getwindowlocations(imagesize, IWsize, overlap, SWsize, border) #Note: T
     return x_iw, y_iw, xsw, ysw
 end
 
+export MaxMin, Gauss5Point
 
+abstract type SubPixelDisplacement end
 
-function plot_IW(image, xiw, yiw, iwx, iwy; linecolor=:red)
-    x = [xiw, xiw+iwx, xiw+iwx, xiw, xiw]
-    y = [yiw, yiw, yiw+iwy, yiw+iwy, yiw]
-
-    plt = plot(image)
-    plot!(x, y; linewidth=3, linecolor=linecolor, leg=false) 
-    return plt
+struct MaxMin <: SubPixelDisplacement
 end
 
-function plot_windows(image, xiw, yiw, iwx, iwy, xsw, ysw, swx, swy)
-    x = [xiw, xiw+iwx, xiw+iwx, xiw, xiw]
-    y = [yiw, yiw, yiw+iwy, yiw+iwy, yiw]
+struct Gauss5Point <: SubPixelDisplacement
+end
 
-    xs = [xsw, xsw+swx, xsw+swx, xsw, xsw]
-    ys = [ysw, ysw, ysw+swy, ysw+swy, ysw]
+function getmax(spd::MaxMin, phi)
+    _, idx = findmax(phi)
     
-    plt = plot(image)
-    plot!(x, y; linewidth=3, linecolor=:red, leg=false)
-    plot!(xs, ys; linewidth=3, linecolor=:blue, leg=false)
-    return plt
+    return idx[2], idx[1]
 end
 
-function plot_velocityfield(x, y, v; scaling=1, skip::Int=0)
-    nx = length(x)
-    ny = length(y)
-    nn = nx*ny
+function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I don't get zeros. Is it supposed to be zero? I should think so. -> It was associated with the indexing issue.
+    #Question: Using the sub-pixel displacement, the location of the vector shouldn't change, just the distance of the vector? Right? 
+    _, idx = findmax(phi) #Todo. Is indexing on the equation y, x or x, y? -> The indexing is x,y; there is an equation on the slide before. Now I need to fix it. - done
+    #Todo: I should put something in to catch if the index is on the edge.  
 
-    xx = repeat(x, inner=ny)
-    yy = repeat(y, outer=nx)
+    z01 = phi[idx[1]+1, idx[2]]
+    z0_1 = phi[idx[1]-1, idx[2]]
+    z00 = phi[idx]
+    z10 = phi[idx[1], idx[2]+1]
+    z_10 = phi[idx[1], idx[2]-1]
 
-    u_ = Array{Float64, 1}(undef, nn)
-    v_ = Array{Float64, 1}(undef, nn)
+    xtop = log(z10)-log(z_10)
+    xbot = 4*log(z00) - 2*log(z0_1) - 2*log(z01)
+    xstar = idx[2] + xtop/xbot
 
-    idx = 1
-    for j = 1:nx
-        for i = 1:ny
-            u_[idx] = v[i, j, 1]*scaling
-            v_[idx] = v[i, j, 2]*scaling
-            idx += 1
-        end
-    end
-
-    idxs = 1:1+skip:nn
-
-    return quiver(xx[idxs], yy[idxs], quiver=(u_[idxs], v_[idxs])) 
+    ytop = log(z01) - log(z0_1)
+    ybot = 4*log(z00) - 2*log(z0_1) - 2*log(z01)
+    ystar = idx[1] + ytop/ybot
+    return xstar, ystar
 end
+
+function getmin(spd::MaxMin, phi)
+    _, idx = findmin(phi)
+    return idx[2], idx[1]
+end
+
+function getmin(spd::Gauss5Point, phi)
+    _, idx = findmin(phi)  
+    z01 = phi[idx[1]+1, idx[2]]
+    z0_1 = phi[idx[1]-1, idx[2]]
+    z00 = phi[idx]
+    z10 = phi[idx[1], idx[2]+1]
+    z_10 = phi[idx[1], idx[2]-1]
+
+    xtop = log(z10)-log(z_10)
+    xbot = 4*log(z00) - 2*log(0_1) - 2*log(z01)
+    xstar = idx[2] + xtop/xbot
+
+    ytop = log(z01) - log(z0_1)
+    ybot = 4*log(z00) - 2*log(z0_1) - 2*log(z01)
+    ystar = idx[1] + ytop/ybot
+    return xstar, ystar
+end
+
