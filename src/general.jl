@@ -139,16 +139,18 @@ end
 struct Gauss5Point <: SubPixelDisplacement
 end
 
-function getmax(spd::MaxMin, phi)
-    _, idx = findmax(phi)
-    
-    return idx[2], idx[1]
+#=
+Get the Gaussian 3 point where the derivative equals zero. 
+=#
+function gauss3point(phi)
+    # c0 = ln(phi[2])
+    c1 = ln(phi[3]/phi[1])/2
+    c2 = ln(phi[1]*phi[3]/(2*phi[2]))/2
+
+    return -c1/(2*c2)
 end
 
-function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I don't get zeros. Is it supposed to be zero? I should think so. -> It was associated with the indexing issue.
-    #Question: Using the sub-pixel displacement, the location of the vector shouldn't change, just the distance of the vector? Right? 
-    _, idx = findmax(phi) #Todo. Is indexing on the equation y, x or x, y? -> The indexing is x,y; there is an equation on the slide before. Now I need to fix it. - done
-    #Todo: I should put something in to catch if the index is on the edge.  
+function gauss5point(phi, idx)
 
     z01 = phi[idx[1]+1, idx[2]]
     z0_1 = phi[idx[1]-1, idx[2]]
@@ -163,7 +165,42 @@ function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I d
     ytop = log(z01) - log(z0_1)
     ybot = 4*log(z00) - 2*log(z0_1) - 2*log(z01)
     ystar = idx[1] + ytop/ybot
+
     return xstar, ystar
+end
+
+
+
+function getmax(spd::MaxMin, phi)
+    _, idx = findmax(phi)
+    
+    return idx[2], idx[1]
+end
+
+function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I don't get zeros. Is it supposed to be zero? I should think so. -> It was associated with the indexing issue.
+    #Question: Using the sub-pixel displacement, the location of the vector shouldn't change, just the distance of the vector? Right? 
+    _, idx = findmax(phi) #Todo. Is indexing on the equation y, x or x, y? -> The indexing is x,y; there is an equation on the slide before. Now I need to fix it. - done
+    #Todo. I should put something in to catch if the index is on the edge.
+
+    ### Check if it is on the edge
+    n, m = size(phi)
+
+    if idx[1]==1||idx[1]==n
+        if idx[2]==1||idx[2]==m ### Corner case
+            return idx[2], idx[1]
+        else ### X edge case
+            xstar = gauss3point(view(phi, idx[2]-1:idx[2]+1))
+            return xstar, idx[1]
+        end
+    end
+
+    if idx[2]==1||idx[2]==m ### Y edge case
+        ystar = gauss3point(view(phi, idx[1]-1:idx[1]+1))
+        return idx[2], ystar
+    end
+
+    ### Centerpoint case
+    return gauss5point(phi, idx)
 end
 
 function getmin(spd::MaxMin, phi)
@@ -173,19 +210,25 @@ end
 
 function getmin(spd::Gauss5Point, phi)
     _, idx = findmin(phi)  
-    z01 = phi[idx[1]+1, idx[2]]
-    z0_1 = phi[idx[1]-1, idx[2]]
-    z00 = phi[idx]
-    z10 = phi[idx[1], idx[2]+1]
-    z_10 = phi[idx[1], idx[2]-1]
+    
+    ### Check if it is on the edge
+    n, m = size(phi)
 
-    xtop = log(z10)-log(z_10)
-    xbot = 4*log(z00) - 2*log(0_1) - 2*log(z01)
-    xstar = idx[2] + xtop/xbot
+    if idx[1]==1||idx[1]==n
+        if idx[2]==1||idx[2]==m ### Corner case
+            return idx[2], idx[1]
+        else ### X edge case
+            xstar = gauss3point(view(phi, idx[2]-1:idx[2]+1))
+            return xstar, idx[1]
+        end
+    end
 
-    ytop = log(z01) - log(z0_1)
-    ybot = 4*log(z00) - 2*log(z0_1) - 2*log(z01)
-    ystar = idx[1] + ytop/ybot
-    return xstar, ystar
+    if idx[2]==1||idx[2]==m ### Y edge case
+        ystar = gauss3point(view(phi, idx[1]-1:idx[1]+1))
+        return idx[2], ystar
+    end
+
+    ### Centerpoint case
+    return gauss5point(phi, idx)
 end
 
