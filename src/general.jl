@@ -189,13 +189,13 @@ function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I d
         if idx[2]==1||idx[2]==m ### Corner case
             return idx[2], idx[1]
         else ### X edge case
-            xstar = gauss3point(view(phi, idx[2]-1:idx[2]+1))
+            xstar = gauss3point(view(phi, idx[1], idx[2]-1:idx[2]+1))
             return xstar, idx[1]
         end
     end
 
     if idx[2]==1||idx[2]==m ### Y edge case
-        ystar = gauss3point(view(phi, idx[1]-1:idx[1]+1))
+        ystar = gauss3point(view(phi, idx[1]-1:idx[1]+1, idx[2]))
         return idx[2], ystar
     end
 
