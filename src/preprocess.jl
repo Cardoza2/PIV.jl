@@ -17,6 +17,32 @@ abstract type MatrixProcess <: Preprocess end
 
 ### Put new preprocessing structs here and define methods on the structs. 
 
+export Contrast
+
+struct Contrast <: MatrixProcess
+    a::Float64
+    b::Float64 #TODO: I'm not sure that I need this second value, because I'm ranging from 0 to 1. At the same time, it doesn't look like it hurts it, but I'll default to 1. 
+end
+
+function Contrast(a)
+    return Contrast(a, 1)
+end
+
+function (method::Contrast)(mat)
+    Gmax = maximum(mat)^method.a
+    Gmin = minimum(mat)^method.a
+
+    n, m = size(mat)
+
+    for i = 1:n
+        for j = 1:m
+            mat[i,j] = (2^method.b - 1)*(mat[i,j]^method.a - Gmin)/(Gmax-Gmin)
+        end
+    end
+end
+
+
+
 export preprocess
 
 function preprocess(images, kwargs...)
@@ -57,7 +83,7 @@ function preprocess(images, kwargs...)
         mat[:,:,i] = convertimage(image)
 
         for pm = 1:npm
-            matrixprocesses[pm](mat[:,:,i])
+            matrixprocesses[pm](view(mat, :, :, i))
         end
     end
 

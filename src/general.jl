@@ -139,6 +139,8 @@ end
 struct Gauss5Point <: SubPixelDisplacement
 end
 
+#TODO: I could do a weighted average SPD. 
+
 #=
 Get the Gaussian 3 point where the derivative equals zero. 
 =#
@@ -178,7 +180,7 @@ function getmax(spd::MaxMin, phi)
 end
 
 function getmax(spd::Gauss5Point, phi) #Todo. When passing the same image in I don't get zeros. Is it supposed to be zero? I should think so. -> It was associated with the indexing issue.
-    #Question: Using the sub-pixel displacement, the location of the vector shouldn't change, just the distance of the vector? Right? 
+    #Question. Using the sub-pixel displacement, the location of the vector shouldn't change, just the distance of the vector? Right? Right.
     _, idx = findmax(phi) #Todo. Is indexing on the equation y, x or x, y? -> The indexing is x,y; there is an equation on the slide before. Now I need to fix it. - done
     #Todo. I should put something in to catch if the index is on the edge.
 
