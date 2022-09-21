@@ -16,8 +16,8 @@ ip4 = "/Users/adamcardoza/Library/CloudStorage/OneDrive-cardoza.one/BYU/Fall 202
 images = [load(ip3), load(ip4)]
 
 ### Choose a method that suits your fancy. 
-# method = Direct()
-method = MQD()
+method = Direct()
+# method = MQD()
 # method = FFT()
 
 ### Convert the images to matrices and apply any preprocessing.
@@ -56,12 +56,45 @@ vsample = vec(uvec[yidxs, xidxs])
 flag = PIV.meanvalue(vsample, vee, .5, 0)
 
 
-method = MeanValue(0.5)
+valmethod = MeanValue(0.5)
 
-flagged = method(uvec)
+flagged = valmethod(uvec)
 
-method = MedianValue(0.5)
-flagged = method(uvec)
+valmethod = MedianValue(0.5)
+flagged = valmethod(uvec)
 
+#Todo: Test the peak ratio function. 
+
+iy, ix, numimages = size(mat)
+iwy, iwx = iws
+swy, swx = sws
+
+xiw, yiw, xsw, ysw = PIV.getwindowlocations((iy, ix), iws, overlap, sws, border)
+
+iw = view(mat[:,:,1], yiw[1]:yiw[1]+iwy-1, xiw[1]:xiw[1]+iwx-1)
+sw = view(mat[:,:,2], ysw[1]:ysw[1]+swy-1, xsw[1]:xsw[1]+swx-1)
+phimat = PIV.phimatrix(method, iw, sw)
+
+ncpr = 1
+cprn = 3
+cpr = 0.8
+
+#= Ratio test
+Direct - cpr = 0.9 -> 4 flagged
+MQD - cpr=0.5 -> 13 flagged
+FFT - cpr=0.8 -> 34 flagged
+=#
+
+# flagged = []
+# PIV.testratios!(method, flagged, phimat, cpr, ncpr, cprn, 1, 1)
+
+# _, maxidx = findmax(phimat)
+
+# @show maxidx
+# @show flagged[1].idxs
+
+method = FFT()
+
+x, y, v, flags = searchimagepair(method, mat, iws, overlap, sws, border, cpr)
 
 nothing 

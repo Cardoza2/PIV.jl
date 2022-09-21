@@ -9,12 +9,12 @@ Note that the package is still under development. Currently there are 3 correlat
 Additional features include:
 - Sub-pixel displacement (a 5 point Gaussian fit)
 - A pre-processing contrast filter
-
-Features under development:
 - Some vector validation techniques:
   - Mean value test
   - median test using 8 neigbors
   - ratio of correlation peaks. 
+
+Features under development:
 - 8 neighbor average vector replacement
 - Image set analysis
 - Image set averaging
