@@ -47,3 +47,21 @@ function prep_plotdata(x, y, v; scaling=1, skip::Int=0)
     return xx[idxs], yy[idxs], u_[idxs], v_[idxs]
 end
 
+export prep_flagplot
+
+function prep_flagplot(x, y, v, flags::Vector{CartesianIndex}; scaling=1)
+    n = length(flags)
+
+    xx = Array{Float64, 1}(undef, n) #It's not a problem with reverse plotting. 
+    yy = Array{Float64, 1}(undef, n)
+    uu = Array{Float64, 1}(undef, n)
+    vv = Array{Float64, 1}(undef, n)
+
+    for i = 1:n
+        xx[i] = x[flags[i][2]]
+        yy[i] = y[flags[i][1]]
+        uu[i] = v[flags[i], 1]*scaling
+        vv[i] = v[flags[i], 2]*scaling
+    end
+    return xx, yy, uu, vv
+end

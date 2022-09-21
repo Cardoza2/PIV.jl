@@ -45,15 +45,15 @@ strength = @. sqrt(uu^2 + vv^2)
 
 n=1
 uvec = v[:,:,1]
-idx = CartesianIndex(2,2)  
-vee = uvec[idx]
+# idx = CartesianIndex(2,2)  
+# vee = uvec[idx]
 
-xidxs = collect(idx[2]-n:idx[2]+n)
-yidxs = collect(idx[1]-n:idx[1]+n)
+# xidxs = collect(idx[2]-n:idx[2]+n)
+# yidxs = collect(idx[1]-n:idx[1]+n)
 
-vsample = vec(uvec[yidxs, xidxs])
+# vsample = vec(uvec[yidxs, xidxs])
 
-flag = PIV.meanvalue(vsample, vee, .5, 0)
+# flag = PIV.meanvalue(vsample, vee, .5, 0)
 
 
 valmethod = MeanValue(0.5)
@@ -64,7 +64,7 @@ valmethod = MedianValue(0.5)
 flagged = valmethod(uvec)
 
 #Todo: Test the peak ratio function. 
-
+######## Test the Corrrelation peak ratio flagging. 
 iy, ix, numimages = size(mat)
 iwy, iwx = iws
 swy, swx = sws
@@ -93,8 +93,39 @@ FFT - cpr=0.8 -> 34 flagged
 # @show maxidx
 # @show flagged[1].idxs
 
-method = FFT()
 
-x, y, v, flags = searchimagepair(method, mat, iws, overlap, sws, border, cpr)
+# method = FFT()
+
+# x, y, v, flags = searchimagepair(method, mat, iws, overlap, sws, border, cpr)
+
+
+###### Test Vector replacement
+uvec = v[:,:,1]
+vvec = v[:,:,2]
+
+valmethod = MedianValue(0.5) #Validation Method
+uflags = valmethod(uvec)
+vflags = valmethod(vvec)
+
+v2 = deepcopy(v)
+
+repmethod = Average() #Replacement method. 
+repmethod(view(v2, :, :, 1), uflags)
+repmethod(view(v2, :, :, 2), vflags)
+
+
+flagged = unique(vcat(uflags, vflags))
+
+
+xx, yy, uu, vv = prep_plotdata(x, y, v; skip=0, scaling=3.0)
+
+xx2, yy2, uu2, vv2 = prep_flagplot(x, y, v2, flagged; scaling=3.0)
+
+strength = @. sqrt(uu^2 + vv^2)
+strength2 = @. sqrt(uu2^2 + vv2^2)
+
+plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
+arrows!(xx2, yy2, uu2, vv2; arrowhead=:utriangle, arrowsize=7, arrowcolor=:red, linecolor=:red)
+display(plt)
 
 nothing 

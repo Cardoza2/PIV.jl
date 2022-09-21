@@ -42,6 +42,7 @@ function (method::MeanValue)(v)
             end
 
             vsample = vec(v[yidxs, xidxs])
+            
             deleteat!(vsample, findfirst(x->x==vee, vsample)) #Remove the entry of question. 
 
             if meanvalue(vsample, vee, method.c1, method.c2)
@@ -52,12 +53,12 @@ function (method::MeanValue)(v)
     return idxs
 end
 
-function meanvalue(vsample, v, c1, c2) #Todo: Test me. 
+function meanvalue(vsample, v, c1, c2) 
 
     mu = Statistics.mean(vsample)
     sigma = sqrt(Statistics.mean((vsample.-mu).^2))
     eps = c1 + c2*sigma
-
+    # @show mu, v, eps
     if abs(mu-v)<eps
         return false #Accept the vector
     else
@@ -120,3 +121,66 @@ function medianvalue(vsample, v, eps) #Todo: Test me.
         return true #Yes, reject the vector 
     end
 end
+
+
+
+
+abstract type Replacement <: PostProcess end
+
+export Decimate, Average
+
+struct Decimate <: Replacement
+end
+
+function (method::Decimate)(v, flags::Vector{CartesianIndex})
+    for i = 1:length(flags)
+        v[flags[i]] = 0
+    end
+end
+
+struct Average <: Replacement #LinearIndices(uvec)[flagged[1]]
+    n::Int #Distance from flag to average by. 
+end
+
+function Average()
+    return Average(1)
+end
+
+function (method::Average)(v, flags::Vector{CartesianIndex})
+
+    n, m = size(v)
+    k = length(flags)
+    vreplace = Array{Float64, 1}(undef, k)
+
+    for i = 1:k
+        idx = flags[i]
+        vee = v[idx]
+
+        ### Find which indices to average over. 
+        xidxs = collect(idx[2]-method.n:idx[2]+method.n)
+        yidxs = collect(idx[1]-method.n:idx[1]+method.n)
+
+        if idx[1]==1 #Top edge
+            yidxs = collect(idx[1]:idx[1]+method.n)
+        elseif idx[1]==n #Bot edge
+            yidxs = collect(idx[1]-method.n:idx[1])
+        end
+
+        if idx[2]==1 #Left edge
+            xidxs = collect(idx[2]:idx[2]+method.n)
+        elseif idx[2]==m #Right edge
+            xidxs = collect(idx[2]-method.n:idx[2])
+        end
+
+        vsample = vec(v[yidxs, xidxs])
+        deleteat!(vsample, findfirst(x->x==vee, vsample)) #Remove the entry of question. 
+    
+        vreplace[i] = Statistics.mean(vsample) #Replace with the average
+    end
+
+    for i = 1:k
+        v[flags[i]] = vreplace[i]
+    end
+
+end
+
