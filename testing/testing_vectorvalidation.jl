@@ -32,9 +32,9 @@ border = 0.55 #Border percentage (of interrogation window size)
 # spd = MaxMin()
 spd = Gauss5Point()
 
-
-x, y, v = searchimagepair(method, mat, iws, overlap, sws, border; spd)
-
+if !@isdefined(v)
+    x, y, v = searchimagepair(method, mat, iws, overlap, sws, border; spd)
+end
 
 xx, yy, uu, vv = prep_plotdata(x, y, v; skip=0, scaling=3.0)
 
@@ -43,33 +43,25 @@ strength = @. sqrt(uu^2 + vv^2)
 # plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
 # display(plt)
 
+n=1
+uvec = v[:,:,1]
+idx = CartesianIndex(2,2)  
+vee = uvec[idx]
+
+xidxs = collect(idx[2]-n:idx[2]+n)
+yidxs = collect(idx[1]-n:idx[1]+n)
+
+vsample = vec(uvec[yidxs, xidxs])
+
+flag = PIV.meanvalue(vsample, vee, .5, 0)
 
 
-# iy, ix, numimages = size(mat)
-# iwy, iwx = iws
-# swy, swx = sws
+method = MeanValue(0.5)
 
-# xiw, yiw, xsw, ysw = PIV.getwindowlocations((iy, ix), iws, overlap, sws, border)
+flagged = method(uvec)
 
-# iw = view(mat[:,:,1], yiw[1]:yiw[1]+iwy-1, xiw[1]:xiw[1]+iwx-1)
-# sw = view(mat[:,:,2], ysw[1]:ysw[1]+swy-1, xsw[1]:xsw[1]+swx-1)
-# phimat = PIV.phimatrix(method, iw, sw)
+method = MedianValue(0.5)
+flagged = method(uvec)
 
-# using Plots
-# phim = phimat[1:3]
-# phim[1] = 6.4
-# phim[2] = 6
-# y = -1:1:1
-# y2 = -1:0.1:1
-# ymin = g3pmin(phim)
-
-# @show phim, ymin
-
-# phig3p = gauss3point.(Ref(phim), y2) #Todo: Did not match very well. 
-
-# plt = plot(y, phim, lab="actual")
-# plot!(y2, phig3p, lab="gauss 3 point")
-# vline!([ymin])
-# display(plt)
 
 nothing 
