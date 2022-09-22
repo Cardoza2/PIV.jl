@@ -184,3 +184,84 @@ function (method::Average)(v, flags::Vector{CartesianIndex})
 
 end
 
+abstract type Calculation <: PostProcess end
+
+abstract type Vorticity <: Calculation end
+
+export CentralDiff
+
+struct CentralDiff <: Vorticity
+end
+
+function (method::CentralDiff)(x, y, v)
+    n, m, _ = size(v)
+    uvec = view(v, :, :, 1)
+    vvec = view(v, :, :, 2)
+    vorticity = zeros(n, m)
+    for i = 2:n-1
+        for j = 2:m-1
+            dx = x[j+1] - x[j-1]  #Note: The distance is the distance between the two points, not the spacing. This allows for non-uniform spacing. The 2deltaX disappears from the denominator. 
+            dy = y[i+1] - y[i-1]
+            t1 = (vvec[i, j+1] - vvec[i,j-1])/dx
+            t2 = (uvec[i+1,j] - uvec[i-1,j])/dy #This might be negative. 
+            vorticity[i,j] = (t1 - t2)
+        end
+    end
+    return x, reverse(y), reverse(vorticity, dims=1)
+end
+
+export TrapezoidalCirculation
+
+struct TrapezoidalCirculation <: Vorticity
+end
+
+function (method::TrapezoidalCirculation)(x, y, vmat)
+
+    n, m, _ = size(vmat)
+
+    u = vmat[:, :, 1]
+    v = vmat[:, :, 2]
+
+    vorticity = zeros(n, m)
+    for i = 2:n-1
+        for j = 2:m-1
+            dx = x[j+1] - x[j-1]
+            dy = y[i+1] - y[i-1]
+            ta = (u[i-1, j-1] + u[i-1, j])*(x[j]-x[j-1])/2 + (u[i-1, j] + u[i-1, j+1])*(x[j+1] - x[j])/2 #Top edge
+            tb = (v[i-1, j+1] + v[i, j+1])*(y[i]-y[i-1])/2 + (v[i, j+1] + v[i+1, j+1])*(y[i+1] - y[i])/2 #Right edge
+            tc = (u[i+1, j+1] + u[i+1, j])*(x[j]-x[j+1])/2 + (u[i+1, j+1] + u[i+1, j])*(x[j-1] - x[j])/2 #Bottom edge
+            td = (v[i+1, j-1] + v[i, j-1])*(y[i]-y[i+1])/2 + (v[i+1, j-1] + v[i, j-1])*(y[i-1] - y[i])/2 #Left edge
+            gamma = ta + tb + tc + td
+            vorticity[i,j] = gamma/(dx*dy)
+        end
+    end
+    return x, reverse(y), reverse(vorticity, dims=1)
+end
+
+export Richardson
+
+struct Richardson <: Vorticity
+end
+
+function (method::Richardson)(x, y, v)
+
+    n, m, _ = size(v)
+
+    uvec = view(v, :, :, 1)
+    vvec = view(v, :, :, 2)
+
+    vorticity = zeros(n, m)
+    for i = 3:n-2
+        for j = 3:m-2
+            dx = x[j+1] - x[j-1]
+            dy = y[i+1] - y[i-1]
+            t1 = (vvec[i, j-2] - 8*vvec[i,j-1] + 8*vvec[i, j+1] - vvec[i, j+2])/(6*dx)
+            t2 = (uvec[i-2,j] - 8*uvec[i-1,j] + 8*uvec[i+1,j] - uvec[i+2,j])/(6*dy)
+            vorticity[i,j] = t1 - t2
+        end
+    end
+    return x, reverse(y), reverse(vorticity, dims=1)
+end
+
+struct AkimaSpline <: Vorticity
+end

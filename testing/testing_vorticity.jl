@@ -32,44 +32,31 @@ border = 0.55 #Border percentage (of interrogation window size)
 # spd = MaxMin()
 spd = Gauss5Point()
 
-
-x, y, v = searchimagepair(method, mat, iws, overlap, sws, border; spd)
+if !@isdefined(v)
+    x, y, v = searchimagepair(method, mat, iws, overlap, sws, border; spd)
+end
 
 
 xx, yy, uu, vv = prep_plotdata(x, y, v; skip=0, scaling=8.0)
 
 strength = @. sqrt(uu^2 + vv^2)
 
-plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
-display(plt)
+# plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
+# display(plt)
 
+# cmethod = CentralDiff()
+# cmethod = Richardson()
+cmethod = TrapezoidalCirculation()
 
-
-# iy, ix, numimages = size(mat)
-# iwy, iwx = iws
-# swy, swx = sws
-
-# xiw, yiw, xsw, ysw = PIV.getwindowlocations((iy, ix), iws, overlap, sws, border)
-
-# iw = view(mat[:,:,1], yiw[1]:yiw[1]+iwy-1, xiw[1]:xiw[1]+iwx-1)
-# sw = view(mat[:,:,2], ysw[1]:ysw[1]+swy-1, xsw[1]:xsw[1]+swx-1)
-# phimat = PIV.phimatrix(method, iw, sw)
+xv, yv, vorticity = cmethod(x, y, v)
 
 # using Plots
-# phim = phimat[1:3]
-# phim[1] = 6.4
-# phim[2] = 6
-# y = -1:1:1
-# y2 = -1:0.1:1
-# ymin = g3pmin(phim)
 
-# @show phim, ymin
+# vortplt = contourf(x, reverse(y), reverse(vorticity, dims=1), colormap=:RdBu_5) #plots.jl 
+vortplt = heatmap(xv, yv, vorticity, colormap=:RdBu_5)
+display(vortplt)
 
-# phig3p = gauss3point.(Ref(phim), y2) #Todo: Did not match very well. 
 
-# plt = plot(y, phim, lab="actual")
-# plot!(y2, phig3p, lab="gauss 3 point")
-# vline!([ymin])
-# display(plt)
+
 
 nothing 

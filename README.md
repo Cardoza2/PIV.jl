@@ -13,13 +13,15 @@ Additional features include:
   - Mean value test
   - median test using 8 neigbors
   - ratio of correlation peaks. 
+- Vector replacement
+  - 8 neighbor average
+  - Decimation
+- Vorticity calculations. Derivatives will be calculated by:
+  - Central Difference
+  - 8 point circulation using trapezoidal integration. 
+  - Richardson Extrapolation
 
 Features under development:
-- 8 neighbor average vector replacement
 - Image set analysis
 - Image set averaging
-- Vorticity calculations. Derivatives will be calculated by:
-  - By simple difference (a centrally averaged forward step difference technique)
-  - 8 point circulation 
-  - Central difference
-  - Analytical derivative of fitted Akima splines. 
+
