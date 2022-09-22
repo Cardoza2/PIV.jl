@@ -65,3 +65,38 @@ function prep_flagplot(x, y, v, flags::Vector{CartesianIndex}; scaling=1)
     end
     return xx, yy, uu, vv
 end
+
+
+### This function is super mega broke. Don't use it. 
+function prep_flagplot_special(xiw, yiw, xsw, ysw, x, y, flags; scaling=1)
+    n = length(flags)
+
+    xx = Array{Float64, 1}(undef, n) #It's not a problem with reverse plotting. 
+    yy = Array{Float64, 1}(undef, n)
+    uu = Array{Float64, 1}(undef, n)
+    vv = Array{Float64, 1}(undef, n)
+
+
+    for i = 1:n
+        vidx = flags[i].vidx
+
+        phi = flags[i].phi
+        maxidx = flags[i].maxidxs[1]
+
+        xv = xsw[vidx[2]] + maxidx[2] - 1
+        yv = ysw[vidx[1]] + maxidx[1] - 1
+
+        unew = xv-xiw[vidx[2]]
+        vnew = -(yv-yiw[vidx[1]])
+
+        # phi[maxidx[1]-1:maxidx[1]+1, maxidx[2]-1:maxidx[1]+1] .= 0
+
+        # unew, vnew = getvelocity(method, spd, phi, xiw, yiw, xsw, ysw)
+
+        xx[i] = x[vidx[2]]
+        yy[i] = y[vidx[1]]
+        uu[i] = unew*scaling
+        vv[i] = vnew*scaling
+    end
+    return xx, yy, uu, vv
+end

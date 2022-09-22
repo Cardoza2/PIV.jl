@@ -94,38 +94,57 @@ FFT - cpr=0.8 -> 34 flagged
 # @show flagged[1].idxs
 
 
-# method = FFT()
+method = FFT()
 
-# x, y, v, flags = searchimagepair(method, mat, iws, overlap, sws, border, cpr)
-
-
-###### Test Vector replacement
-uvec = v[:,:,1]
-vvec = v[:,:,2]
-
-valmethod = MedianValue(0.5) #Validation Method
-uflags = valmethod(uvec)
-vflags = valmethod(vvec)
-
-v2 = deepcopy(v)
-
-repmethod = Average() #Replacement method. 
-repmethod(view(v2, :, :, 1), uflags)
-repmethod(view(v2, :, :, 2), vflags)
+x, y, v, flags = searchimagepair(method, mat, iws, overlap, sws, border, cpr)
 
 
-flagged = unique(vcat(uflags, vflags))
+# ###### Test Vector replacement
+# uvec = v[:,:,1]
+# vvec = v[:,:,2]
 
+# valmethod = MedianValue(0.5) #Validation Method
+# uflags = valmethod(uvec)
+# vflags = valmethod(vvec)
+
+# v2 = deepcopy(v)
+
+# repmethod = Average() #Replacement method. 
+# repmethod(view(v2, :, :, 1), uflags)
+# repmethod(view(v2, :, :, 2), vflags)
+
+
+# flagged = unique(vcat(uflags, vflags))
+
+
+# xx, yy, uu, vv = prep_plotdata(x, y, v; skip=0, scaling=3.0)
+
+# xx2, yy2, uu2, vv2 = prep_flagplot(x, y, v2, flagged; scaling=3.0)
+
+# strength = @. sqrt(uu^2 + vv^2)
+# strength2 = @. sqrt(uu2^2 + vv2^2)
+
+# plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
+# arrows!(xx2, yy2, uu2, vv2; arrowhead=:utriangle, arrowsize=7, arrowcolor=:red, linecolor=:red)
+# display(plt)
+
+
+
+
+
+
+######### Test ratio vector replacement. 
 
 xx, yy, uu, vv = prep_plotdata(x, y, v; skip=0, scaling=3.0)
 
-xx2, yy2, uu2, vv2 = prep_flagplot(x, y, v2, flagged; scaling=3.0)
+xx2, yy2, uu2, vv2 = PIV.prep_flagplot_special(xiw, yiw, xsw, ysw, x, y, flags; scaling=3.0)
 
 strength = @. sqrt(uu^2 + vv^2)
-strength2 = @. sqrt(uu2^2 + vv2^2)
+
 
 plt = arrows(xx, yy, uu, vv; arrowhead=:utriangle, arrowsize=7, arrowcolor=strength, linecolor=strength, colormap=Reverse(:grays))
 arrows!(xx2, yy2, uu2, vv2; arrowhead=:utriangle, arrowsize=7, arrowcolor=:red, linecolor=:red)
 display(plt)
+
 
 nothing 

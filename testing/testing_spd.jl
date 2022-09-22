@@ -29,8 +29,8 @@ sws = (64, 64) #Search window size
 border = 0.55 #Border percentage (of interrogation window size)
 
 ### Sub-Pixel Displacement
-# spd = MaxMin()
-spd = Gauss5Point()
+spd = MaxMin()
+# spd = Gauss5Point()
 
 
 x, y, v = searchimagepair(method, mat, iws, overlap, sws, border; spd)

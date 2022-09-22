@@ -145,9 +145,9 @@ end
 Get the Gaussian 3 point where the derivative equals zero. 
 =#
 function gauss3point(phi)
-    # c0 = ln(phi[2])
-    c1 = ln(phi[3]/phi[1])/2
-    c2 = ln(phi[1]*phi[3]/(2*phi[2]))/2
+    # c0 = log(phi[2])
+    c1 = log(phi[3]/phi[1])/2
+    c2 = log(phi[1]*phi[3]/(2*phi[2]))/2
 
     return -c1/(2*c2)
 end
@@ -234,3 +234,16 @@ function getmin(spd::Gauss5Point, phi)
     return gauss5point(phi, idx)
 end
 
+export searchimages
+
+function searchimages(method::Method, mat, IWsize, overlap, SWsize, border; verbose::Bool=true, spd::SubPixelDisplacement=Gauss5Point())
+    _, _, numimages = size(mat)
+
+    outs = []
+    for i = 1:numimages-1
+        x, y, v = searchimagepair(method, mat[:, :, i:i+1], IWsize, overlap, SWsize, border; verbose, spd)
+        out = (x=x, y=y, v=v)
+        push!(outs, out)
+    end
+    return outs
+end

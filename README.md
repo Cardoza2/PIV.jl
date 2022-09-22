@@ -20,8 +20,8 @@ Additional features include:
   - Central Difference
   - 8 point circulation using trapezoidal integration. 
   - Richardson Extrapolation
+- Image set analysis
 
 Features under development:
-- Image set analysis
 - Image set averaging
 
